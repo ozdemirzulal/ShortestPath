@@ -39,10 +39,16 @@ public class BFS {
         // Why we used array list (MyArrayList)?
         // Dynamic resizing and efficiency in random access
         MyArrayList<String> visited = new MyArrayList<>();
+        // Track the shortest distance from the start city to each visited city
+        MyArrayList<Integer> pathLengths = new MyArrayList<>();
 
         // Add the starting city to the queue
         // Enqueue the starting city with an empty path and 0 km distance
         queue.enqueue(new QueueFrame(startCity, new MyArrayList<>(), 0));
+        // Mark the starting city as visited
+        visited.add(startCity);
+        // The distance from start city to itself (0 km)
+        pathLengths.add(0);
         
         // Traverse the graph
         // Continue processing the queue until every city has been explored
@@ -74,26 +80,38 @@ public class BFS {
                 continue;
             }
 
-            // Mark the current city as visited
-            if (!visitedContains(visited, currentCity)) {
-                visited.add(currentCity);
-            }
-
-            // Process neighbours of the current city
+            // Explore the neighbours of the current city
             for (Node node : nodes) {
+            	// Find the current city in the graph
                 if (node.getName().equals(currentCity)) {
+                	// Iterate through the neighbors of the current city
                     for (CityData neighbour : node.getNeighbours()) {
-                    	// New path length
+                    	// Calculate distance to neighbour
                         int newPathLength = pathLength + neighbour.getCityDistance();
-                        // Add a neighbour to the queue
-                        // If the new path is shorter than the current shortest path
-                        // If the neighbour has not been visited
-                        if (newPathLength < bfsPath.pathLength && !visitedContains(visited, neighbour.getCityName())) {
+                        // Check if the neighbour has been visited (with a shorter or equal path length)
+                        boolean alreadyVisited = false;
+                        for (int i = 0; i < visited.size(); i++) {
+                            if (visited.get(i).equals(neighbour.getCityName()) && pathLengths.get(i) <= newPathLength) {
+                                alreadyVisited = true;
+                                break;
+                            }
+                        }
+
+                        // Add a neighbour if it has not been visited with a shorter path
+                        if (!alreadyVisited) {
+                        	// Mark as visited
+                            visited.add(neighbour.getCityName());
+                            // The new path length
+                            pathLengths.add(newPathLength);
+                            // Copy current path
+                            // Avoid changes
                             MyArrayList<String> newPath = copyPath(path);
+                            // Enqueue neighbour
                             queue.enqueue(new QueueFrame(neighbour.getCityName(), newPath, newPathLength));
                         }
+                        
                     }
-                    // Stop processing neigbours
+                    // Stop processing the neigbours
                     break;
                 }
             }
@@ -134,13 +152,4 @@ public class BFS {
         return copy;
     }
     
-    // Check if the given city is visited
-    // Time Complexity -> O(n)
-    // n is the size of the visited list
-    private static boolean visitedContains(MyArrayList<String> visited, String city) {
-        for (int i = 0; i < visited.size(); i++) {
-            if (visited.get(i).equals(city)) return true;
-        }
-        return false;
-    }
 }
